@@ -1,15 +1,14 @@
 #!/usr/bin/bash
 #
 # Install juju and make it work.
-#
 # Joey <joey.mcdonald@nokia.com>
 
 # Pull in admin credentials
-
 source /root/keystonerc_admin || exit 255
 
 VM='mass-vm'
 key='/root/.ssh/juju_id_rsa'
+guest_vlan='48'
 
 function verify_creds() {
 
@@ -25,7 +24,7 @@ function create_sec_group() {
    neutron security-group-create smssh &> /dev/null
 
    # Wide open for now..
-   nova secgroup-add-rule smssh tcp 1 65535 0.0.0.0/0
+   nova secgroup-add-rule smssh tcp 1 65535 0.0.0.0/0 &> /dev/null
 
    #for port in 22 80 443; do
       #neutron security-group-rule-create --direction ingress --ethertype IPv4 --protocol \
@@ -33,7 +32,7 @@ function create_sec_group() {
    #done
 
    neutron security-group-rule-create --direction ingress --ethertype IPv4 \
-      --protocol icmp smssh 
+      --protocol icmp smssh &> /dev/null
 
    neutron security-group-list | grep -q smssh
    check_exit_code
@@ -58,11 +57,11 @@ function create_provider_network() {
       echo "Installing ($net.0/$prefix)"
 
       neutron net-create floating --provider:network_type flat \
-          --provider:physical_network RegionOne --router:external=True 
+          --provider:physical_network RegionOne --router:external=True  &> /dev/null
 
       neutron subnet-create --name floating-subnet --allocation-pool \
           start=$start,end=$end --gateway $gateway floating $net.0/24 \
-          --dns_nameservers list=true 8.8.8.8 
+          --dns_nameservers list=true 8.8.8.8  &> /dev/null
 
    else
       echo "Ok"
@@ -77,9 +76,9 @@ function create_virtual_router() {
    if [ $? != '0' ]; then
       echo "Installing"
 
-      neutron router-create router1 
-      neutron router-gateway-set router1 floating 
-      neutron router-interface-add router1 subnet1 
+      neutron router-create router1  &> /dev/null
+      neutron router-gateway-set router1 floating  &> /dev/null
+      neutron router-interface-add router1 subnet1  &> /dev/null
    else
       echo "Ok"
    fi
@@ -93,8 +92,9 @@ function create_tenant_networks() {
    if [ $? != '0' ]; then
 
       echo "Installing"
-      neutron net-create --provider:physical_network RegionOne --provider:network_type vlan --provider:segmentation_id 48 smnet1 
-      neutron subnet-create smnet1 10.10.10.0/24 --name subnet1 
+      neutron net-create --provider:physical_network RegionOne \
+         --provider:network_type vlan --provider:segmentation_id $guest_vlan smnet1  &> /dev/null
+      neutron subnet-create smnet1 10.10.10.0/24 --name subnet1  &> /dev/null
 
    else
       echo "Ok"
@@ -112,7 +112,7 @@ function boot_vm() {
       # Management VM
       nova boot --image $(nova image-list | grep ubuntu1404 | awk '{print $2}') --flavor m1.large \
           --nic net-id=$(neutron net-list | grep floating | awk '{print $2}')  \
-          --key_name juju-key --security_groups smssh $VM 
+          --key_name juju-key --security_groups smssh $VM &> /dev/null
 
    else
       echo "Ok" 
@@ -125,7 +125,7 @@ function create_flavors() {
    nova flavor-list|grep -q m1.medium
    if [ $? != '0' ]; then
       echo "Installing"
-      nova flavor-create m1.medium auto 4096 40 2 
+      nova flavor-create m1.medium auto 4096 40 2 &> /dev/null
    else
       echo "Ok"
    fi
@@ -134,7 +134,7 @@ function create_flavors() {
    nova flavor-list|grep -q m1.large
    if [ $? != '0' ]; then
       echo "Installing"
-      nova flavor-create m1.large auto 8192 80 4 
+      nova flavor-create m1.large auto 8192 80 4 &> /dev/null
    else
       echo "Ok"
    fi
@@ -143,7 +143,7 @@ function create_flavors() {
    nova flavor-list|grep -q m1.xlarge
    if [ $? != '0' ]; then
       echo "Installing"
-      nova flavor-create m1.xlarge auto 16384 160 8 
+      nova flavor-create m1.xlarge auto 16384 160 8 &> /dev/null
    else
       echo "Ok"
    fi
@@ -152,7 +152,7 @@ function create_flavors() {
 function create_ssh_key() {
 
    echo -n "Checking for crypto keys: "
-   if [ ! -f $key.pub ]; then
+   if [ ! -f $key ]; then
       echo "Installing"
       nova keypair-add juju-key > $key
       chmod 400 $key
@@ -180,7 +180,7 @@ function wait_for_running() {
 function clean_up() {
 
    ip=$(get_vm_ip)
-   cat ~/.ssh/known_hosts | grep -v $ip > /tmp/known_hosts
+   cat ~/.ssh/known_hosts | grep -v $ip > /tmp/known_hosts &> /dev/null
    mv /tmp/known_hosts /root/.ssh/
 
    for uuid in `nova list |egrep "$VM|juju-juju-os-machine" |awk '{print $2}'`
@@ -216,7 +216,8 @@ function clean_up() {
       nova flavor-delete $uuid &> /dev/null
    done
 
-   rm -rf $key
+   rm -rf $key ${key}.pub
+
    nova keypair-delete juju-key &> /dev/null
 }
 
@@ -245,10 +246,10 @@ function install_juju() {
    run_cmd_jr="ssh -q -l ubuntu $ip -i $key"
    run_cmd_rt="ssh -q -l root $ip -i $key"
 
-   $run_cmd_jr "sudo sed -n 's/^.*ssh-rsa/ssh-rsa/p' /root/.ssh/authorized_keys > /tmp/authorized_keys" 
-   $run_cmd_jr "sudo mv /tmp/authorized_keys /root/.ssh/" 
-   $run_cmd_jr "sudo chmod 600 /root/.ssh/authorized_keys" 
-   $run_cmd_jr "sudo chown root:root /root/.ssh/authorized_keys" 
+   $run_cmd_jr "sudo sed -n 's/^.*ssh-rsa/ssh-rsa/p' /root/.ssh/authorized_keys > /tmp/authorized_keys" &> /dev/null
+   $run_cmd_jr "sudo mv /tmp/authorized_keys /root/.ssh/" &> /dev/null
+   $run_cmd_jr "sudo chmod 600 /root/.ssh/authorized_keys" &> /dev/null
+   $run_cmd_jr "sudo chown root:root /root/.ssh/authorized_keys" &> /dev/null
 
    # sudo isn't happy with out this, amateurs.
    $run_cmd_rt "echo '127.0.0.1 $VM' >> /etc/hosts"
@@ -262,7 +263,7 @@ function install_juju() {
    # echo "Ok"
 
    $run_cmd_rt 'add-apt-repository ppa:juju/stable'
-   $run_cmd_rt 'apt-get update && apt-get dist-upgrade'
+   $run_cmd_rt 'apt-get update && apt-get -y dist-upgrade'
    $run_cmd_rt 'apt-get -y install juju-core python-novaclient python-glanceclient python-neutronclient'
 }
 
@@ -276,6 +277,7 @@ function create_env_yaml() {
    admin_endpoint=$(openstack endpoint show keystone|grep adminurl|awk '{print $4}')
    admin_password=$(grep OS_P /root/keystonerc_admin|awk -F= '{print $2}')
    admin_token=$(grep TOKEN /root/keystonerc_admin|awk -F= '{print $2}')
+   region=$(openstack endpoint list|grep neutron |awk '{print $4}')
 
    cat << EOF > ./environments.yaml
 default: juju-os
@@ -285,7 +287,7 @@ environments:
     auth-url: $admin_endpoint
     default-series: trusty
     password: $admin_password
-    region: RegionOne
+    region: $region
     tenant-name: admin
     type: openstack
     username: admin
@@ -345,9 +347,6 @@ function wait_for_running() {
 
 function start_up() {
 
-   bootstrap_juju
-   exit
-
    verify_creds
    create_sec_group
    create_ssh_key
@@ -361,11 +360,12 @@ function start_up() {
    create_env_yaml
    bootstrap_juju
 }
+
 function shutdown() {
 
    clean_up
 }
 
-#clean_up
+clean_up
 start_up
 
