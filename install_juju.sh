@@ -6,7 +6,7 @@
 # Pull in admin credentials
 source /root/keystonerc_admin || exit 255
 
-VM='mass-vm'
+VM='juju-master'
 key='/root/.ssh/juju_id_rsa'
 guest_vlan='48'
 
@@ -241,6 +241,8 @@ function get_vm_ip() {
 
 function install_juju() {
 
+
+   echo -n "Installing juju software and OS updates: "
    ip=$(get_vm_ip)
 
    run_cmd_jr="ssh -q -l ubuntu $ip -i $key"
@@ -262,9 +264,11 @@ function install_juju() {
    # $run_cmd_rt 'ifup eth1' 
    # echo "Ok"
 
-   $run_cmd_rt 'add-apt-repository ppa:juju/stable'
-   $run_cmd_rt 'apt-get update && apt-get -y dist-upgrade'
-   $run_cmd_rt 'apt-get -y install juju-core python-novaclient python-glanceclient python-neutronclient'
+   $run_cmd_rt 'add-apt-repository ppa:juju/stable' &> /dev/null
+   $run_cmd_rt 'apt-get update && apt-get -y dist-upgrade' &> /dev/null
+   $run_cmd_rt 'apt-get -y install juju-core python-novaclient python-glanceclient python-neutronclient' &> /dev/null
+
+   echo "Ok"
 }
 
 function create_env_yaml() {
@@ -326,6 +330,23 @@ function bootstrap_juju() {
    $run_cmd_rt "chown -R www-data:www-data /var/www/html/metadata/"
    $run_cmd_rt 'juju bootstrap --constraints instance-type=m1.medium --debug'
    echo "Ok"
+}
+
+function deploy_wordpress() {
+
+   echo -n "Deploying sample application: "
+
+   ip=$(get_vm_ip)
+   run_cmd_rt="ssh -q -l root $ip -i $key"
+
+   $run_cmd_rt 'juju deploy mysql'
+   $run_cmd_rt 'juju deploy wordpress'
+   $run_cmd_rt 'juju add-relation wordpress mysql'
+   $run_cmd_rt 'juju expose wordpress'
+   $run_cmd_rt 'juju status --format=tabular'
+   echo "Ok"
+
+
 }
 
 function wait_for_running() {
