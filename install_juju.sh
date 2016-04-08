@@ -156,6 +156,7 @@ function create_ssh_key() {
       echo "Installing"
       nova keypair-add juju-key > $key
       chmod 400 $key
+      nova keypair-show juju-key|grep ^Public|awk -F': ' '{print $2}' > ${key}.pub
    else
       echo "Ok"
    fi
@@ -260,6 +261,7 @@ function install_juju() {
    # $run_cmd_rt 'ifup eth1' 
    # echo "Ok"
 
+   $run_cmd_rt 'apt-get update && apt-get dist-upgrade'
    $run_cmd_rt 'apt-get -y install juju-core python-novaclient python-glanceclient python-neutronclient'
 }
 
@@ -292,13 +294,13 @@ environments:
     image-metadata-url: http://$ip/metadata/images/
 EOF
 
-   $run_cmd_rt="mkdir -p /root/.juju/environments/"
-   $run_cmd_rt="mkdir -p /root/.juju/ssh/"
+   $run_cmd_rt "mkdir -p /root/.juju/environments/" &> /dev/null
+   $run_cmd_rt "mkdir -p /root/.juju/ssh/" &> /dev/null
+
    scp -q -i $key environments.yaml $ip:/root/.juju/
    scp -q -i $key $key $ip:/root/.juju/ssh/
    scp -q -i $key $key.pub $ip:/root/.juju/ssh/
    echo "Ok"
-
 }
 
 function bootstrap_juju() {
@@ -341,6 +343,9 @@ function wait_for_running() {
 
 function start_up() {
 
+   bootstrap_juju
+   exit
+
    verify_creds
    create_sec_group
    create_ssh_key
@@ -359,6 +364,6 @@ function shutdown() {
    clean_up
 }
 
-clean_up
+#clean_up
 start_up
 
