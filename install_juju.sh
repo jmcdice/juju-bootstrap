@@ -182,7 +182,7 @@ function clean_up() {
    cat ~/.ssh/known_hosts | grep -v $ip > /tmp/known_hosts
    mv /tmp/known_hosts /root/.ssh/
 
-   for uuid in `nova list |grep $VM |awk '{print $2}'`
+   for uuid in `nova list |egrep "$VM|juju-juju-os-machine" |awk '{print $2}'`
    do
       nova delete $uuid
    done
@@ -359,5 +359,6 @@ function shutdown() {
    clean_up
 }
 
+clean_up
 start_up
 
