@@ -1,10 +1,12 @@
-#!/usr/bin/sh
-# Check a bunch of common openstack stuff in one place, post-install and tell
-# the installer how it all looks.
+#!/usr/bin/bash
+#
+# Install juju and make it work.
+#
+# Joey <joey.mcdonald@nokia.com>
 
 # Pull in admin credentials
-# source juju.rc
-source /root/keystonerc_admin
+
+source /root/keystonerc_admin || exit 255
 
 VM='mass-vm'
 key='/root/.ssh/juju_id_rsa'
