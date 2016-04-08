@@ -343,10 +343,9 @@ function deploy_wordpress() {
    $run_cmd_rt 'juju deploy wordpress'
    $run_cmd_rt 'juju add-relation wordpress mysql'
    $run_cmd_rt 'juju expose wordpress'
-   $run_cmd_rt 'juju status --format=tabular'
-   echo "Ok"
-
-
+   sleep 120
+   wp_ip=$($run_cmd_rt 'juju status wordpress|grep public'|  awk '{print $2}')
+   echo "http://$wp_ip/"
 }
 
 function wait_for_running() {
@@ -380,6 +379,7 @@ function start_up() {
    install_juju
    create_env_yaml
    bootstrap_juju
+   deploy_wordpress
 }
 
 function shutdown() {
