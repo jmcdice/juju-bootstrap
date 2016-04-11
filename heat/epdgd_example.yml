@@ -1,0 +1,64 @@
+# Heat OpenStack Resource Types
+# http://docs.openstack.org/developer/heat/template_guide/openstack.html
+# Joey <Joey.McDonald@nokia.com>
+# I snagged most of this test deploy from Radek
+
+heat_template_version: 2013-05-23
+
+description: Stub Template
+
+parameters:
+    public_net:
+        type: string
+        description: Public Network
+
+resources:
+    rheat00:
+        type: OS::Nova::Server
+        properties:
+            image: ubuntu1404
+            flavor: default
+            networks:
+            - network: { get_param: public_net }
+
+    rheat01:
+        type: OS::Nova::Server
+        depends_on: rheat00
+        properties:
+            image: ubuntu1404
+            flavor: default
+            networks:
+            - network: { get_param: public_net }
+
+    vm_group:
+        type: OS::Heat::ResourceGroup
+        properties:
+            count: 5
+            resource_def:
+                type: OS::Nova::Server
+                properties:
+                    name: "rserver-group"
+                    image: "ubuntu1404"
+                    flavor: "default"
+                    networks: 
+                    - network: { get_param: public_net }
+
+
+    r_volume_00:
+        type: OS::Cinder::Volume
+        properties:
+            name: rvol_heat
+            description: rvol_heat
+            size: 10
+
+    group_volumes:
+        type: "OS::Heat::ResourceGroup"
+        properties:
+            count: 10
+            resource_def:
+                type: "OS::Cinder::Volume"
+                properties:
+                    size: 15
+                    description: rstack-test-vol-%index%
+                    name: stack-test-vol-%index%
+
