@@ -1,0 +1,6 @@
+#!/bin/bash
+
+echo -n "Starting ePDG services: "
+sleep 3
+echo "Ok"
+

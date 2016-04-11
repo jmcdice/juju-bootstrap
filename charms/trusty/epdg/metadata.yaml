@@ -1,0 +1,19 @@
+name: epdg
+summary: ePDG Deployment Charm
+maintainer: <joey> joey.mcdonald@nokia.com
+description: |
+  Evolved Packet Data Gateway deployment 
+tags:
+  - misc
+subordinate: false
+
+# We can figure this out later.
+# provides:
+  # provides-relation:
+    # interface: 
+# requires:
+  # requires-relation:
+    # interface: interface-name
+# peers:
+  # peer-relation:
+    # interface: interface-name

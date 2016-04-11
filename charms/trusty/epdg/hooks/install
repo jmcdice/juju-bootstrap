@@ -1,0 +1,44 @@
+#!/bin/bash
+# 
+
+debug='true'
+
+source /root/keystonerc_admin &> /dev/null
+env | grep -q OS_AUTH_URL
+if [ $? != 0 ]; then
+   echo "Need OpenStack creds to continue." 
+   exit 255
+fi
+
+function install_heat_client() {
+
+   heat &> /dev/null
+   if [ $? != 0 ]; then    
+      status-set maintenance "Installing heat client tools."
+      apt-get -y install python-heatclient git &> /dev/null
+   fi
+}
+
+function git_update() {
+
+   if [ -d /var/juju-bootstrap/ ]; then
+      status-set maintenance "Updating juju-bootstrap."
+      cd /var/juju-bootstrap && git pull &> /dev/null
+   else
+      status-set maintenance "Installing juju-bootstrap."
+      cd /var/ && git clone https://github.com/jmcdice/juju-bootstrap.git
+   fi
+}
+
+function status-set() {
+   echo $@
+}
+
+function stack_deploy() {
+
+   cd /var/juju-bootstrap/heat && bash deploy.sh
+}
+
+install_heat_client
+git_update
+stack_deploy
