@@ -1,14 +1,25 @@
 options:
-  string-option:
-    type: string
-    default: "Default Value"
-    description: "A short description of the configuration option"
-  boolean-option:
-    type: boolean
-    default: False
-    description: "A short description of the configuration option"
-  int-option:
-    type: int
-    default: 9001
-    description: "A short description of the configuration option"
-
+  public_network: 
+      default: e2541ee4-79c2-4957-8e8e-b16012311be1
+      description: The public IP's for our services
+      type: string
+   os_username: 
+      default: admin
+      description: The OpenStack user 
+      type: string
+   os_tenant_name: 
+      default: admin
+      description: The OpenStack tenant
+      type: string
+   os_password: 
+      default: h0r1z0n
+      description: The OpenStack user pw
+      type: string
+   keystone_admin_token: 
+      default: 39a3f03b7f9f45c2be9da3b419d74d50
+      description: The OpenStack Admin Token
+      type: string
+   os_auth_url: 
+      default: http://172.29.55.5:35357/v2.0/
+      description: The OpenStack Auth URL
+      type: string

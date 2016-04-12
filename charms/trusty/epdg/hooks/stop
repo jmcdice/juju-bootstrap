@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# Deploy our stack.
+
+
+function stack_destroy() {
+
+   cd /var/juju-bootstrap/heat && bash destroy.sh
+}
+
+echo -n "Stopping ePDG services: "
+status-set maintenance "Stopping ePDG services"
+stack_destroy
+sleep 3
+echo "Ok"

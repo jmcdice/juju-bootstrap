@@ -1,9 +1,18 @@
 #!/bin/bash
 # 
+# Deploy a simple heat stack as a juju charm.
+# Joey <joey.mcdonald@nokia.com>
+
+set -x 
 
 debug='true'
 
-source /root/keystonerc_admin &> /dev/null
+# This is a problem.. how are we going to make these
+# creds portable. They need to exist in the bundle or
+# be made available to the build somehow.. hmmmmm..
+source keystonerc_admin 
+
+
 env | grep -q OS_AUTH_URL
 if [ $? != 0 ]; then
    echo "Need OpenStack creds to continue." 
@@ -30,15 +39,5 @@ function git_update() {
    fi
 }
 
-function status-set() {
-   echo $@
-}
-
-function stack_deploy() {
-
-   cd /var/juju-bootstrap/heat && bash deploy.sh
-}
-
 install_heat_client
 git_update
-stack_deploy

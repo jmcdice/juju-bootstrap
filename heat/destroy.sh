@@ -4,13 +4,10 @@
 # need to know about.
 
 OS_USERNAME=$(charm-get os_username)
-OS_TENANT_NAME=$(charm-get os_tenant_name) 
+OS_TENANT_NAME=$(charm-get os_tenant_name)
 OS_PASSWORD=$(charm-get os_password)
 KEYSTONE_ADMIN_TOKEN=$(charm-get keystone_admin_token)
 OS_AUTH_URL=$(charm-get os_auth_url)
-NET_ID=$(charm-get public_net)
 
-heat stack-create -f epdgd_example.yml \
-   -P public_net=$NET_ID \
-   epdg-stack-00
+heat stack-destroy epdg-stack-00
 
