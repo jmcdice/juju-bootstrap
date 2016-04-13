@@ -20,8 +20,13 @@ heat stack-create -f /var/juju-bootstrap/heat/epdgd_example.yml \
    -P public_net=$NET_ID \
    epdg-stack-00
 
+sleep 10
 
-sleep 3
+heat stack-list | grep epdg-stack-00 | grep -q CREATE_COMPLETE
+while test $? -gt 0; do
+   sleep 5
+   heat stack-list | grep epdg-stack-00 | grep -q CREATE_COMPLETE
+done
+
+status-set maintenance "ePDG successfully started."
 echo "Ok"
-
-
