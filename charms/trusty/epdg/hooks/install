@@ -4,14 +4,17 @@
 # Joey <joey.mcdonald@nokia.com>
 
 set -x 
-
-debug='true'
+debug=''
 
 # This is a problem.. how are we going to make these
 # creds portable. They need to exist in the bundle or
 # be made available to the build somehow.. hmmmmm..
-source keystonerc_admin 
-
+OS_USERNAME=$(charm-get os_username)
+OS_TENANT_NAME=$(charm-get os_tenant_name)
+OS_PASSWORD=$(charm-get os_password)
+KEYSTONE_ADMIN_TOKEN=$(charm-get keystone_admin_token)
+OS_AUTH_URL=$(charm-get os_auth_url)
+NET_ID=$(charm-get public_net)
 
 env | grep -q OS_AUTH_URL
 if [ $? != 0 ]; then
