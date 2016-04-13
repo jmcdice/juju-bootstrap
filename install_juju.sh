@@ -339,14 +339,15 @@ function deploy_wordpress() {
    ip=$(get_vm_ip)
    run_cmd_rt="ssh -q -l root $ip -i $key"
 
-   $run_cmd_rt 'juju deploy mysql' &> /dev/null
-   $run_cmd_rt 'juju deploy wordpress' &> /dev/null
-   $run_cmd_rt 'juju add-relation wordpress mysql' &> /dev/null
-   $run_cmd_rt 'juju expose wordpress' &> /dev/null
+   $run_cmd_rt 'git clone https://github.com/jmcdice/juju-bootstrap.git'
+   $run_cmd_rt 'juju deploy --repository=/root/juju-bootstrap/charms/ local:trusty/epdg'
 
-   sleep 120
-   wp_ip=$($run_cmd_rt 'juju status wordpress|grep public'|  awk '{print $2}')
-   echo "http://$wp_ip/"
+   #$run_cmd_rt 'juju deploy mysql' &> /dev/null
+   #$run_cmd_rt 'juju deploy wordpress' &> /dev/null
+   #$run_cmd_rt 'juju add-relation wordpress mysql' &> /dev/null
+   #$run_cmd_rt 'juju expose wordpress' &> /dev/null
+   #wp_ip=$($run_cmd_rt 'juju status wordpress|grep public'|  awk '{print $2}')
+   #sleep 120; echo "http://$wp_ip/"
 }
 
 function wait_for_running() {
