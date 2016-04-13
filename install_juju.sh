@@ -388,6 +388,7 @@ function deploy_epdg() {
    ip=$(get_vm_ip)
    run_cmd_rt="ssh -q -l root $ip -i $key"
 
+   $run_cmd_rt 'echo "export JUJU_CLI_VERSION=2" >> /root/.bashrc' # makes juju status a lot nicer
    $run_cmd_rt 'apt-get -y install git' &> /dev/null
    $run_cmd_rt 'git clone https://github.com/jmcdice/juju-bootstrap.git' &> /dev/null
    $run_cmd_rt "juju deploy --config=/root/${service}.yaml --repository=/root/juju-bootstrap/charms/ local:trusty/epdg" &> /dev/null
