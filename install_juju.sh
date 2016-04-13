@@ -315,7 +315,7 @@ function bootstrap_juju() {
    # This was nearly impossible to get right.
    # https://jujucharms.com/docs/stable/howto-privatecloud#deploying-private-clouds
 
-   echo "Bootstraping juju: "
+   echo -n "Bootstraping juju: "
    ip=$(get_vm_ip)
    run_cmd_rt="ssh -q -l root $ip -i $key"
 
