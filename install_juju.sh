@@ -9,6 +9,7 @@ source /root/keystonerc_admin || exit 255
 VM='juju-master'
 key='/root/.ssh/juju_id_rsa'
 guest_vlan='48'
+service='epdg'
 
 function verify_creds() {
 
@@ -310,6 +311,34 @@ EOF
    echo "Ok"
 }
 
+function create_service_yaml() {
+
+   echo -n "Creating service YAML for $service deployment: "
+
+   ip=$(get_vm_ip)
+   run_cmd_rt="ssh -q -l root $ip -i $key"
+
+   admin_endpoint=$(openstack endpoint show keystone|grep adminurl|awk '{print $4}')
+   admin_password=$(grep OS_P /root/keystonerc_admin|awk -F= '{print $2}')
+   admin_token=$(grep TOKEN /root/keystonerc_admin|awk -F= '{print $2}')
+   floating=$(neutron net-list|grep floating|awk '{print $2}')
+
+   cat << EOF > ./${service}.yaml
+---
+$service:
+  keystone_admin_token: $admin_token
+  os_auth_url: $admin_endpoint
+  os_password: $admin_password
+  os_tenant_name: admin
+  os_username: admin
+  public_network: $floating
+EOF
+
+   scp -q -i $key ${service}.yaml $ip: 
+   echo "Ok"
+
+}
+
 function bootstrap_juju() {
 
    # This was nearly impossible to get right.
@@ -332,6 +361,26 @@ function bootstrap_juju() {
    echo "Ok"
 }
 
+function deploy_juju_gui() {
+
+   echo -n "Deploying juju-gui: "
+
+   ip=$(get_vm_ip)
+   run_cmd_rt="ssh -q -l root $ip -i $key"
+
+   $run_cmd_rt 'juju deploy juju-gui' &> /dev/null
+
+   #$run_cmd_rt 'juju deploy mysql' &> /dev/null
+   #$run_cmd_rt 'juju deploy wordpress' &> /dev/null
+   #$run_cmd_rt 'juju add-relation wordpress mysql' &> /dev/null
+   #$run_cmd_rt 'juju expose wordpress' &> /dev/null
+   #wp_ip=$($run_cmd_rt 'juju status wordpress|grep public'|  awk '{print $2}')
+   #sleep 120; echo "http://$wp_ip/"
+   echo "Ok"
+
+}
+
+
 function deploy_epdg() {
 
    echo -n "Deploying ePDG: "
@@ -339,9 +388,9 @@ function deploy_epdg() {
    ip=$(get_vm_ip)
    run_cmd_rt="ssh -q -l root $ip -i $key"
 
-   $run_cmd_rt 'apt-get -y install git'
-   $run_cmd_rt 'git clone https://github.com/jmcdice/juju-bootstrap.git'
-   $run_cmd_rt 'juju deploy --repository=/root/juju-bootstrap/charms/ local:trusty/epdg'
+   $run_cmd_rt 'apt-get -y install git' &> /dev/null
+   $run_cmd_rt 'git clone https://github.com/jmcdice/juju-bootstrap.git' &> /dev/null
+   $run_cmd_rt "juju deploy --config=/root/${service}.yaml --repository=/root/juju-bootstrap/charms/ local:trusty/epdg" &> /dev/null
 
    #$run_cmd_rt 'juju deploy mysql' &> /dev/null
    #$run_cmd_rt 'juju deploy wordpress' &> /dev/null
@@ -382,6 +431,8 @@ function start_up() {
    install_juju
    create_env_yaml
    bootstrap_juju
+   create_service_yaml
+   deploy_juju_gui
    deploy_epdg
 }
 
