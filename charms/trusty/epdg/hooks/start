@@ -4,15 +4,17 @@
 # The install hook will put our git bundle in
 # /var/juju-bootstrap/ so we can access stuff we need in there.
 
-OS_USERNAME=$(config-get os_username)
-OS_TENANT_NAME=$(config-get os_tenant_name) 
-OS_PASSWORD=$(config-get os_password)
-KEYSTONE_ADMIN_TOKEN=$(config-get keystone_admin_token)
-OS_AUTH_URL=$(config-get os_auth_url)
-NET_ID=$(config-get public_network)
+export OS_USERNAME=$(config-get os_username)
+export OS_TENANT_NAME=$(config-get os_tenant_name) 
+export OS_PASSWORD=$(config-get os_password)
+export KEYSTONE_ADMIN_TOKEN=$(config-get keystone_admin_token)
+export OS_AUTH_URL=$(config-get os_auth_url)
+export NET_ID=$(config-get public_network)
 
 echo -n "Starting ePDG services: "
 status-set maintenance "Starting ePDG services"
+
+echo "OS_USERNAME=($OS_USERNAME)"
 
 heat stack-create -f /var/juju-bootstrap/heat/epdgd_example.yml \
    -P public_net=$NET_ID \
