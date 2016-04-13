@@ -332,9 +332,9 @@ function bootstrap_juju() {
    echo "Ok"
 }
 
-function deploy_wordpress() {
+function deploy_epdg() {
 
-   echo -n "Deploying sample application: "
+   echo -n "Deploying ePDG: "
 
    ip=$(get_vm_ip)
    run_cmd_rt="ssh -q -l root $ip -i $key"
@@ -381,7 +381,7 @@ function start_up() {
    install_juju
    create_env_yaml
    bootstrap_juju
-   deploy_wordpress
+   deploy_epdg
 }
 
 function shutdown() {
