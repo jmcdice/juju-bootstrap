@@ -267,7 +267,7 @@ function install_juju() {
 
    $run_cmd_rt 'add-apt-repository ppa:juju/stable' &> /dev/null
    $run_cmd_rt 'apt-get update && apt-get -y dist-upgrade' &> /dev/null
-   $run_cmd_rt 'apt-get -y install juju-core python-novaclient python-glanceclient python-neutronclient' &> /dev/null
+   $run_cmd_rt 'apt-get -y install apache2 git juju-core python-novaclient python-glanceclient python-neutronclient' &> /dev/null
 
    echo "Ok"
 }
@@ -348,7 +348,6 @@ function bootstrap_juju() {
    ip=$(get_vm_ip)
    run_cmd_rt="ssh -q -l root $ip -i $key"
 
-   $run_cmd_rt 'apt-get -y install apache2' &> /dev/null
    $run_cmd_rt 'service apache2 start' &> /dev/null
    scp -q -i $key /root/keystonerc_admin $ip:/root/
    $run_cmd_rt 'mkdir -p /var/www/html/metadata/'
@@ -381,17 +380,16 @@ function deploy_juju_gui() {
 }
 
 
-function deploy_epdg() {
+function deploy_service() {
 
-   echo -n "Deploying ePDG: "
+   echo -n "Deploying $service: "
 
    ip=$(get_vm_ip)
    run_cmd_rt="ssh -q -l root $ip -i $key"
 
    $run_cmd_rt 'echo "export JUJU_CLI_VERSION=2" >> /root/.bashrc' # makes juju status a lot nicer
-   $run_cmd_rt 'apt-get -y install git' &> /dev/null
-   $run_cmd_rt 'git clone https://github.com/jmcdice/juju-bootstrap.git' &> /dev/null
-   $run_cmd_rt "juju deploy --config=/root/${service}.yaml --repository=/root/juju-bootstrap/charms/ local:trusty/epdg" &> /dev/null
+   $run_cmd_rt 'git clone https://github.com/jmcdice/juju-bootstrap.git' 
+   $run_cmd_rt "juju deploy --config=/root/${service}.yaml --repository=/root/juju-bootstrap/charms/ local:trusty/$service" 
 
    #$run_cmd_rt 'juju deploy mysql' &> /dev/null
    #$run_cmd_rt 'juju deploy wordpress' &> /dev/null
@@ -434,7 +432,7 @@ function start_up() {
    bootstrap_juju
    create_service_yaml
    deploy_juju_gui
-   deploy_epdg
+   deploy_service
 }
 
 function shutdown() {
