@@ -326,9 +326,9 @@ function bootstrap_juju() {
 
    image_uuid=$(glance image-list|grep ubuntu1404 |awk '{print $2}')
    meta_cmd="juju metadata generate-image -d /var/www/html/metadata -s trusty -i $image_uuid -a amd64"
-   $run_cmd_rt "$meta_cmd"
+   $run_cmd_rt "$meta_cmd" &> /dev/null
    $run_cmd_rt "chown -R www-data:www-data /var/www/html/metadata/"
-   $run_cmd_rt 'juju bootstrap --constraints instance-type=m1.medium --debug'
+   $run_cmd_rt 'juju bootstrap --constraints instance-type=m1.medium --debug' &> /dev/null
    echo "Ok"
 }
 
