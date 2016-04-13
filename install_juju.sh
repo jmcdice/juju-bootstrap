@@ -113,7 +113,8 @@ function boot_vm() {
       # Management VM
       nova boot --image $(nova image-list | grep ubuntu1404 | awk '{print $2}') --flavor m1.large \
           --nic net-id=$(neutron net-list | grep floating | awk '{print $2}')  \
-          --key_name juju-key --security_groups smssh $VM &> /dev/null
+          --key_name juju-key --security_groups smssh $VM  &> /dev/null
+      sleep 10
 
    else
       echo "Ok" 
@@ -184,6 +185,11 @@ function clean_up() {
    cat ~/.ssh/known_hosts | grep -v $ip > /tmp/known_hosts &> /dev/null
    mv /tmp/known_hosts /root/.ssh/
 
+   for stack in `heat stack-list|grep epdg-stack-00|awk '{print $2}'`
+   do
+      heat stack-delete $stack &> /dev/null
+   done
+
    for uuid in `nova list |egrep "$VM|juju-juju-os-machine" |awk '{print $2}'`
    do
       nova delete $uuid
@@ -217,7 +223,7 @@ function clean_up() {
       nova flavor-delete $uuid &> /dev/null
    done
 
-   rm -rf $key ${key}.pub
+   rm -rf $key ${key}.pub &> /dev/null
 
    nova keypair-delete juju-key &> /dev/null
 }
@@ -415,7 +421,6 @@ function wait_for_running() {
 }
 
 
-# clean_up
 
 function start_up() {
 
@@ -437,11 +442,49 @@ function start_up() {
    echo "Deployment Complete"
 }
 
-function shutdown() {
+while [[ $# < 1 ]]; do
+   echo ""
+   echo "  ./$0 [-c|--create] [-d|--destroy]"
+   echo ""
+   exit
+done
 
-   clean_up
-}
+while [[ $# > 0 ]]
+do
+action="$1"
 
-clean_up
-start_up
+case $action in
+    -d|--destroy)
+    DESTROY="yes"
+    shift # Completely destory everything.
+    ;;
+    -c|--create)
+    STARTUP="yes"
+    shift # Start up the whole virtual cluster.
+    ;;
+
+
+    *)
+            # unknown option
+    ;;
+esac
+shift # past argument or value
+done
+
+if [ "$DESTROY" == 'yes' ]; then
+   while true; do
+       echo ""
+       read -p "Do you wish to destroy the current install? [y/n]: " yn
+       case $yn in
+           [Yy]* ) clean_up; exit;;
+           [Nn]* ) exit;;
+           * ) echo "Please answer yes or no.";;
+       esac
+   done
+fi
+
+if [ "$STARTUP" == 'yes' ]; then
+   start_up
+   exit
+fi
 
