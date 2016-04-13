@@ -388,9 +388,10 @@ function deploy_service() {
    run_cmd_rt="ssh -q -l root $ip -i $key"
 
    $run_cmd_rt 'echo "export JUJU_CLI_VERSION=2" >> /root/.bashrc' # makes juju status a lot nicer
-   $run_cmd_rt 'git clone https://github.com/jmcdice/juju-bootstrap.git' 
-   $run_cmd_rt "juju deploy --config=/root/${service}.yaml --repository=/root/juju-bootstrap/charms/ local:trusty/$service" 
+   $run_cmd_rt 'git clone https://github.com/jmcdice/juju-bootstrap.git' &> /dev/null
+   $run_cmd_rt "juju deploy --config=/root/${service}.yaml --repository=/root/juju-bootstrap/charms/ local:trusty/$service" &> /dev/null
 
+   echo "Ok"
    #$run_cmd_rt 'juju deploy mysql' &> /dev/null
    #$run_cmd_rt 'juju deploy wordpress' &> /dev/null
    #$run_cmd_rt 'juju add-relation wordpress mysql' &> /dev/null
@@ -433,6 +434,7 @@ function start_up() {
    create_service_yaml
    deploy_juju_gui
    deploy_service
+   echo "Deployment Complete"
 }
 
 function shutdown() {
