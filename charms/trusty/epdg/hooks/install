@@ -16,7 +16,9 @@ KEYSTONE_ADMIN_TOKEN=$(config-get keystone_admin_token)
 OS_AUTH_URL=$(config-get os_auth_url)
 NET_ID=$(config-get public_net)
 
-env | grep -q OS_AUTH_URL
+echo "OS_USERNAME=($OS_USERNAME)"
+
+echo $OS_AUTH_URL| grep -q http
 if [ $? != 0 ]; then
    echo "Need OpenStack creds to continue." 
    exit 255
