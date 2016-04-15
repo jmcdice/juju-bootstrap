@@ -442,7 +442,7 @@ function start_up() {
    create_service_yaml
    deploy_juju_gui
    deploy_service
-   end_time=$(date + %s)
+   end_time=$(date +%s)
    seconds=$(($end_time - $start_time));
    minutes=$(($seconds / 60))
    
