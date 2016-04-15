@@ -187,7 +187,9 @@ function clean_up() {
 
    for stack in `heat stack-list|grep epdg-stack-00|awk '{print $2}'`
    do
+      echo -n "Deleting $stack: "
       heat stack-delete $stack &> /dev/null
+      echo "Ok"
    done
 
    for uuid in `nova list |egrep "$VM|juju-juju-os-machine" |awk '{print $2}'`
@@ -424,6 +426,7 @@ function wait_for_running() {
 
 function start_up() {
 
+   start_time=$(date +%s)
    verify_creds
    create_sec_group
    create_ssh_key
@@ -439,7 +442,11 @@ function start_up() {
    create_service_yaml
    deploy_juju_gui
    deploy_service
-   echo "Deployment Complete"
+   end_time=$(date + %s)
+   seconds=$(($end_time - $start_time));
+   minutes=$(($seconds / 60))
+   
+   echo "Deployment completed in $minutes minutes."
 }
 
 while [[ $# < 1 ]]; do
