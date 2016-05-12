@@ -2,14 +2,15 @@
 #
 # Deploy our stack.
 
-
-function stack_destroy() {
-
-   cd /var/juju-bootstrap/heat && bash destroy.sh
-}
+export OS_USERNAME=$(config-get os_username)
+export OS_TENANT_NAME=$(config-get os_tenant_name)
+export OS_PASSWORD=$(config-get os_password)
+export KEYSTONE_ADMIN_TOKEN=$(config-get keystone_admin_token)
+export OS_AUTH_URL=$(config-get os_auth_url)
+export NET_ID=$(config-get public_network)
 
 echo -n "Stopping ePDG services: "
 status-set maintenance "Stopping ePDG services"
-stack_destroy
+heat stack-delete epdg-stack-00
 sleep 3
 echo "Ok"
